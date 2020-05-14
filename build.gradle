@@ -103,6 +103,13 @@ repositories {
             password "${NEXUS_PASSWORD}"
         }
     }
+    maven {
+        url "${NEXUS_SNAPSHOT_URL}"
+        credentials {
+            username "${NEXUS_USER}"
+            password "${NEXUS_PASSWORD}"
+        }
+    }
     mavenLocal()
 }
 

@@ -1,0 +1,59 @@
+service:
+  name: template
+  versions: 1.0
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres.covox.ru
+  application:
+    name: template
+    version: 1.0
+  cloud:
+    consul:
+      host: https://consul.covox.ru
+      port: 443
+      discovery:
+        instanceId: ${spring.application.name}:${docker.instanceId}
+        healthCheckPath: ${management.endpoints.web.base-path}/health
+        healthCheckInterval: 15s
+        tags: bpm
+      config:
+        format: FILES
+        prefix: inSure/master
+        enabled: true
+        failFast: false
+kafka:
+  bootstrapServers: 192.168.88.36:9092,192.168.88.37:9092,192.168.88.38:9092
+  errorTopic: ${spring.application.name}_error_topic
+  properties:
+    "[max.request.size]": 52428800
+    "[compression.type]": gzip
+  groupConsumer:
+    groupId: ${spring.application.name}
+    pollTimeout: 3000
+    concurrency: 1
+    topic: ${spring.application.name}_group
+  specificConsumer:
+    groupId: ${spring.cloud.consul.discovery.instanceId}
+    pollTimeout: 3000
+    concurrency: 1
+    topic: ${spring.application.name}_specific
+  producers:
+    bpm:
+      groupTopic: bpm_group
+      specificTopic: bpm_specific
+    template:
+      groupTopic: template_group
+      specificTopic: template_specific
+    vault:
+      host: dev.covox.ru
+      port:  443
+      scheme: https
+      uri: https://dev.covox.ru/vault
+      connection-timeout: 5000
+      read-timeout: 5000
+      authentication: TOKEN
+      token: 53c09aa3-cc69-57cb-6d24-528747446c92
+#logging:
+#  logstash:
+#    host: 10.15.20.1:5566
+

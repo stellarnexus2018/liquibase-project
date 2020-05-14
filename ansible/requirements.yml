@@ -1,0 +1,3 @@
+- src: git@bitbucket.org:/app_install.git
+  scm: git
+  version: bootstrap

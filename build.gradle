@@ -15,6 +15,13 @@ buildscript {
                 password "${NEXUS_PASSWORD}"
             }
         }
+        maven {
+            url "${NEXUS_SNAPSHOT_URL}"
+            credentials {
+                username "${NEXUS_USER}"
+                password "${NEXUS_PASSWORD}"
+            }
+        }
     }
     dependencies {
         classpath "ru.sberinsur.insure:int-commons:${int_commons_version}"

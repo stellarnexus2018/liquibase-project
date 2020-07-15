@@ -1,4 +1,4 @@
-FROM dev.covox.ru/java-oracle:jre_8
+FROM openjdk:11.0-slim as template_service
 WORKDIR /app
 ARG APP_NAME
 ENV APP_NAME=${APP_NAME}

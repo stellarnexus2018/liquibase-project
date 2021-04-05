@@ -1,5 +1,6 @@
 package ru.sberinsur.insure.service;
 
+import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,15 +8,20 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import ru.sberinsur.audit.Audit;
+import ru.sberinsur.audit.factory.AuditEventFactory;
 import ru.sberinsur.insure.config.KafkaConfig;
 import ru.sberinsur.insure.exception.TemplateErrors;
 import ru.sberinsur.insure.integrations.commons.Headers;
 import ru.sberinsur.insure.integrations.commons.Message;
 import ru.sberinsur.insure.integrations.dto.template.RequestTemplateDto;
 import ru.sberinsur.insure.integrations.exception.InsureException;
+
+import java.util.UUID;
+
 import static ru.sberinsur.insure.integrations.commons.KafkaHelper.intToBytes;
 import static ru.sberinsur.insure.integrations.commons.KafkaHelper.uuidToBytes;
-import java.util.UUID;
+
 
 @Slf4j
 @Component
@@ -26,9 +32,16 @@ public class TemplateService {
     @Autowired
     private KafkaTemplate<String, Message> kafkaTemplate;
 
+
+    private AuditEventFactory auditEventFactory;
+    private Audit audit;
+
+
+
     @Scheduled(fixedRate = 10000)
     public void test(){
-        try {
+
+            SignedJWT signedJWT = null;
             //Генерируем индентификатор сообщения
             UUID messageId = UUID.randomUUID();
             //Устанавливаем вызываемый сервис
@@ -41,7 +54,7 @@ public class TemplateService {
             request.setApplicationId("Test!");
 
             //Мапим Producer - устанавливается в конфигурации сервиса
-            KafkaConfig.Producer serviceProducer = this.kafkaConfig.getProducerByString(serviceName);
+            KafkaConfig.Producer serviceProducer = this.kafkaConfig.getProducers().getTemplate();
             //Создаем сообщение
             ProducerRecord<String, Message> producerRecord = new ProducerRecord<>(serviceProducer.getGroupTopic(), messageId.toString(), request);
             //Устанавливаем заголовки
@@ -49,9 +62,12 @@ public class TemplateService {
             producerRecord.headers().add(Headers.INSURE_MESSAGE_ID.name(), uuidToBytes(messageId));
             producerRecord.headers().add(Headers.INSURE_VERSION.name(), intToBytes(1));
             producerRecord.headers().add(KafkaHeaders.REPLY_TOPIC, this.kafkaConfig.getGroupConsumer().getTopic().getBytes());
+        try {
             //Отправляем сообщение
             this.kafkaTemplate.send(producerRecord);
+
         } catch (Exception e) {
+
             throw new InsureException(e.getMessage(), e, TemplateErrors.TEMPLATE_ERRORS);
         }
     }

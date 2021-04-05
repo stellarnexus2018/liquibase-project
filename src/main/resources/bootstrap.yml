@@ -3,24 +3,44 @@ service:
   versions: 1.0
 spring:
   datasource:
-    url: jdbc:postgresql://postgres.covox.ru
+    url: jdbc:postgresql://localhost:5432/test
+    username: test
+    password: test
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      poolName: templatePool
+      maximumPoolSize: 20
+      minimumIdle: 5
+      idleTimeout: 600000
+      connectionTimeout: 20000
+      leakDetectionThreshold: 0
+
   application:
     name: template
     version: 1.0
   cloud:
     consul:
-      host: https://consul.covox.ru
-      port: 443
+      host: 10.2.40.72
+      port: 8500
       discovery:
         instanceId: ${spring.application.name}:${docker.instanceId}
         healthCheckPath: ${management.endpoints.web.base-path}/health
-        healthCheckInterval: 15s
-        tags: bpm
+        healthCheckInterval: 20s
+        tags: template
       config:
         format: FILES
         prefix: inSure/master
         enabled: true
         failFast: false
+    vault:
+      host: dev.covox.ru
+      port: 443
+      scheme: https
+      uri: https://dev.covox.ru/vault
+      connection-timeout: 5000
+      read-timeout: 5000
+      authentication: TOKEN
+      token: 53c09aa3-cc69-57cb-6d24-528747446c92
 kafka:
   bootstrapServers: 192.168.88.36:9092,192.168.88.37:9092,192.168.88.38:9092
   errorTopic: ${spring.application.name}_error_topic
@@ -44,16 +64,12 @@ kafka:
     template:
       groupTopic: template_group
       specificTopic: template_specific
-    vault:
-      host: dev.covox.ru
-      port:  443
-      scheme: https
-      uri: https://dev.covox.ru/vault
-      connection-timeout: 5000
-      read-timeout: 5000
-      authentication: TOKEN
-      token: 53c09aa3-cc69-57cb-6d24-528747446c92
-#logging:
-#  logstash:
-#    host: 10.15.20.1:5566
+audit:
+  systemName: DID
+  journalName: mainJournal
+  remoteSystemName: DID
+  markerName: AUDIT_SEC
+logging:
+  logstash:
+    host: 10.15.20.1:5566
 

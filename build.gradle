@@ -157,7 +157,9 @@ dependencies {
     //Insure deps
     implementation "ru.sberinsur.insure:int-commons:${int_commons_version}"
     compile "ru.sberinsur.insure:int-commons:${int_commons_version}:sources"
-    implementation "ru.sberinsur.insure.kafkaopenid:kafka-openid:${kafka_openid_version}"
+    compile "ru.sberinsur.insure:audit-commons:${audit_commons_version}"
+    compile "ru.sberinsur.insure:audit-commons:${audit_commons_version}:sources"
+
 
     //logger
     implementation "ch.qos.logback:logback-classic"
@@ -169,6 +171,7 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-annotations"
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
     // lombok
     compileOnly 'org.projectlombok:lombok:1.18.12'
@@ -176,6 +179,14 @@ dependencies {
 
     //other deps
     implementation "org.postgresql:postgresql"
+    implementation "org.modelmapper:modelmapper:2.3.0"
+    implementation 'javax.xml.bind:jaxb-api:2.3.0'
+    implementation 'com.sun.xml.bind:jaxb-impl:2.3.0'
+    implementation 'com.sun.xml.bind:jaxb-core:2.3.0'
+    implementation 'javax.activation:activation:1.1.1'
+    implementation 'com.google.guava:guava:23.0'
+    implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
+    implementation 'com.nimbusds:nimbus-jose-jwt:6.3'
 
     liquibaseRuntime "org.liquibase:liquibase-core"
     liquibaseRuntime "org.postgresql:postgresql"

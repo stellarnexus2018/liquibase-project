@@ -18,6 +18,7 @@ import ru.sberinsur.insure.integrations.dto.common.doc.DocIgnore;
 import ru.sberinsur.insure.integrations.dto.template.ReponseTemplateDto;
 import ru.sberinsur.insure.integrations.dto.template.RequestTemplateDto;
 import ru.sberinsur.insure.integrations.exception.InsureException;
+import ru.sberinsur.insure.util.MapperUtil;
 
 
 import java.util.Map;
@@ -39,12 +40,18 @@ public class GroupListener extends InsureListener {
     @KafkaHandler
     @SendTo("!{source.headers['kafka_replyTopic']}")
     public Message<ReponseTemplateDto> getCustomer(RequestTemplateDto requestTemplateDto, @Headers Map<String, Object> headers, Acknowledgment ack) {
+        //Audit subsystem call
 
         try {
-            log.info("Received group topic {}", requestTemplateDto);
-            log.info("Headers: " + headers);
+            log.info("[getCustomer] Received request");
+            log.info("[getCustomer] Request headers: {}", headers);
+            log.trace("[getCustomer] Received group topic {}", MapperUtil.toJsonString(requestTemplateDto));
+            if (null != headers && !headers.isEmpty()) {
+                this.kafkaHelper.defaultPrintNotNullKafkaHeaders(headers);
+            }
             ack.acknowledge();
-            return new GenericMessage<>(new ReponseTemplateDto("customerResponse"), this.kafkaHelper.correlateHeaders(headers, this.kafkaConfig.getSpecificConsumer().getGroupId()));
+
+            return genericMessageResult(new ReponseTemplateDto("customerResponse"),headers);
         } catch (Exception e) {
             throw new InsureException(e.getMessage(), e, TemplateErrors.TEMPLATE_ERRORS);
         }
@@ -60,5 +67,12 @@ public class GroupListener extends InsureListener {
         log.info(reponseTemplateDto.getResponse());
         ack.acknowledge();
 
+    }
+
+
+
+    private <T extends ru.sberinsur.insure.integrations.commons.Message> Message genericMessageResult(T message, Map<String, Object> headers) {
+        return new GenericMessage(message,
+                this.kafkaHelper.correlateHeaders(headers, this.defaultKafkaConfig.getSpecificConsumer().getGroupId()));
     }
 }

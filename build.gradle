@@ -24,7 +24,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath "ru.sberinsur.insure:int-commons:${int_commons_version}"
+
     }
 }
 

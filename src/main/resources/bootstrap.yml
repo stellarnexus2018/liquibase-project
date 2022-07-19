@@ -2,25 +2,12 @@ service:
   name: template
   versions: 1.0
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/test
-    username: test
-    password: test
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      poolName: templatePool
-      maximumPoolSize: 20
-      minimumIdle: 5
-      idleTimeout: 600000
-      connectionTimeout: 20000
-      leakDetectionThreshold: 0
-
   application:
     name: template
     version: 1.0
   cloud:
     consul:
-      host: 10.2.40.72
+      host: http://did-cnl-01.sberinsur.local
       port: 8500
       discovery:
         instanceId: ${spring.application.name}:${docker.instanceId}
@@ -29,7 +16,7 @@ spring:
         tags: template
       config:
         format: FILES
-        prefix: inSure/master
+        prefix: inSure/develop
         enabled: true
         failFast: false
     vault:

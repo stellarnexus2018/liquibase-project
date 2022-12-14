@@ -1,4 +1,0 @@
-dns_server: 10.15.20.1
-node_count: "{{ node_count }} | default(1)"
-image_name: "{{ app_name }}"
-network_name: "consul"

@@ -50,10 +50,22 @@ ext {
 
 
 group 'ru.sberinsur.insure'
-version = "1.0.0.${BUILD_ID}"
 mainClassName = 'ru.sberinsur.insure.Application'
 sourceCompatibility = 11
 targetCompatibility = 11
+
+// get service version from teamcity if variable is set
+// add branch name to service version if not in master or develop
+if (hasProperty("teamcity")) {
+    version = "${SERVICE_VERSION}." + teamcity["build.number"] + teamcity['branch-name']
+    // set library versions from teamcity build parameters
+    // SPECIFY ONLY DEPENDENT LIBRARIES
+    assert hasProperty("int_commons_version")
+    assert hasProperty("kafka_openid_version")
+    assert hasProperty("audit_commons_version")
+} else {
+    version = "${SERVICE_VERSION}.${BUILD_ID}".toString()
+}
 
 sourceSets {
     main {
@@ -132,6 +144,7 @@ publishing {
             groupId project.group
             version project.version
             from components.java
+            artifact bootJar
         }
     }
     repositories {
@@ -200,6 +213,9 @@ dependencies {
     testCompile("org.junit.platform:junit-platform-launcher:1.2.0")
     testCompile("org.junit.platform:junit-platform-commons:1.2.0")
     testCompile("org.assertj:assertj-core:3.11.0")
+
+    // vault
+    implementation('org.springframework.cloud:spring-cloud-starter-vault-config')
 }
 
 
@@ -225,4 +241,10 @@ bootRun {
     }
 }
 
-
+// set service-version to teamcity parameter
+task teamcityParams() {
+	println("##teamcity[setParameter name='service-version' value='${version}']")
+    println("INT version: \t${int_commons_version}")
+    println("KAFKA version: \t${kafka_openid_version}")
+    println("AUDIT version: \t${audit_commons_version}")
+}

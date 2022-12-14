@@ -1,6 +1,0 @@
-version: '3.5'
-services:
-  postgres:
-    image: dev.covox.ru/postgres
-    ports:
-       - "6432:5432"

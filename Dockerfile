@@ -9,7 +9,10 @@ COPY build/libs/*.jar ./application.jar
 EXPOSE 8080/tcp
 
 # Default command to start service with required variables
-ENTRYPOINT exec java -XX:+UseContainerSupport -Dspring.profiles.active=stand $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar ./application.jar \
+ENTRYPOINT exec java -XX:+UseContainerSupporti  -XX:+ExitOnOutOfMemoryError \
+            -Dspring.profiles.active=stand $JAVA_OPTS \
+            -Djava.security.egd=file:/dev/./urandom \
+            -jar ./application.jar \
             -Pargs=--spring.cloud.bootstrap.location="bootstrap.yml" \
             --docker.instanceId=${INSTANCE_ID} \
             --docker.consulHost=${CONSUL_HOST} \
@@ -21,3 +24,4 @@ ENTRYPOINT exec java -XX:+UseContainerSupport -Dspring.profiles.active=stand $JA
 HEALTHCHECK --start-period=30s --interval=30s --timeout=3s --retries=3 \
             CMD curl -m 5 --silent --fail --request GET http://localhost:8080/actuator/health \
             | jq --exit-status -n 'inputs | if has("status") then .status=="UP" else false end' > /dev/null || exit 1
+

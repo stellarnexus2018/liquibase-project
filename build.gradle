@@ -60,9 +60,12 @@ if (hasProperty("teamcity")) {
     version = "${SERVICE_VERSION}." + teamcity["build.number"] + teamcity['branch-name']
     // set library versions from teamcity build parameters
     // SPECIFY ONLY DEPENDENT LIBRARIES
-    assert hasProperty("int_commons_version")
-    assert hasProperty("kafka_openid_version")
-    assert hasProperty("audit_commons_version")
+    // left variable - name used in your code
+    // on right - property that is will pass from teamcity, DASH - DELIMITER!
+    // TODO: Set your dependent libraries
+    int_commons_version = property("int-commons-version")
+    kafka_openid_version = property("kafka-openid-version")
+    audit_commons_version = property("audit-commons-versions")
 } else {
     version = "${SERVICE_VERSION}.${BUILD_ID}".toString()
 }
@@ -242,8 +245,9 @@ bootRun {
 }
 
 // set service-version to teamcity parameter
+// print used library versions
 task teamcityParams() {
-	println("##teamcity[setParameter name='service-version' value='${version}']")
+    println("##teamcity[setParameter name='service-version' value='${version}']")
     println("INT version: \t${int_commons_version}")
     println("KAFKA version: \t${kafka_openid_version}")
     println("AUDIT version: \t${audit_commons_version}")

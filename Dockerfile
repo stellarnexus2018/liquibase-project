@@ -9,7 +9,7 @@ COPY build/libs/*.jar ./application.jar
 EXPOSE 8080/tcp
 
 # Default command to start service with required variables
-ENTRYPOINT exec java -XX:+UseContainerSupporti  -XX:+ExitOnOutOfMemoryError \
+ENTRYPOINT exec java -XX:+UseContainerSupport  -XX:+ExitOnOutOfMemoryError \
             -Dspring.profiles.active=stand $JAVA_OPTS \
             -Djava.security.egd=file:/dev/./urandom \
             -jar ./application.jar \

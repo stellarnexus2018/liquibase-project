@@ -36,7 +36,7 @@ plugins {
     id "org.liquibase.gradle" version "2.0.1"
     id 'nu.studer.jooq' version '3.0.2'
     id "com.avast.gradle.docker-compose" version "0.8.7"
-    id 'org.sonarqube' version "2.6.2"
+    id 'org.sonarqube' version "3.0"
     id 'java'
     id 'idea'
     id 'application'
@@ -76,7 +76,7 @@ sourceSets {
             srcDirs = ['src/main/java']
         }
         resources {
-            srcDirs = ['src/main/resources','src/main/liquibase']
+            srcDirs = ['src/main/resources', 'src/main/liquibase']
         }
     }
     test {
@@ -93,13 +93,14 @@ configurations {
     testCompile {
         /*Exclude JUnit4, because JUnit 5 MUST be used */
         exclude group: 'junit', module: 'junit'
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
 }
 
 jar {
     manifest{
         attributes  'Version': version,
-                    'Build-time':  new Date().format("dd-MM-yyyy'T'HH:mm:ss")
+                    'Build-time': new Date().format("dd-MM-yyyy'T'HH:mm:ss")
     }
 }
 
@@ -152,7 +153,7 @@ publishing {
     }
     repositories {
         maven {
-            url version.endsWith("SNAPSHOT") ? "${NEXUS_SNAPSHOT_URL}" :"${NEXUS_RELEASE_URL}"
+            url version.endsWith("SNAPSHOT") ? "${NEXUS_SNAPSHOT_URL}" : "${NEXUS_RELEASE_URL}"
             credentials {
                 username NEXUS_USER
                 password NEXUS_PASSWORD

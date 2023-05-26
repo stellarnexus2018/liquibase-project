@@ -39,6 +39,7 @@ plugins {
     id 'org.sonarqube' version "3.0"
     id 'java'
     id 'idea'
+    id 'jacoco'
     id 'application'
     id 'maven-publish'
 }
@@ -63,11 +64,11 @@ if (hasProperty("teamcity")) {
     // left variable - name used in your code
     // on right - property that is will pass from teamcity, DASH - DELIMITER!
     // TODO: Set your dependent libraries
-    int_commons_version = property("int-commons-version")
-    kafka_openid_version = property("kafka-openid-version")
-    audit_commons_version = property("audit-commons-versions")
+    int_commons_version = teamcity("int-commons-version")
+    kafka_openid_version = teamcity("kafka-openid-version")
+    audit_commons_version = teamcity("audit-commons-versions")
 } else {
-    version = "${SERVICE_VERSION}.${BUILD_ID}".toString()
+    version = "${SERVICE_VERSION}.${BUILD_ID}"
 }
 
 sourceSets {
@@ -90,6 +91,9 @@ sourceSets {
 }
 
 configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
     testCompile {
         /*Exclude JUnit4, because JUnit 5 MUST be used */
         exclude group: 'junit', module: 'junit'
@@ -98,9 +102,9 @@ configurations {
 }
 
 jar {
-    manifest{
-        attributes  'Version': version,
-                    'Build-time': new Date().format("dd-MM-yyyy'T'HH:mm:ss")
+    manifest {
+        attributes 'Version': version,
+                'Build-time': new Date().format("dd-MM-yyyy'T'HH:mm:ss")
     }
 }
 
@@ -192,7 +196,9 @@ dependencies {
 
     // lombok
     compileOnly 'org.projectlombok:lombok:1.18.12'
+    testCompile 'org.projectlombok:lombok:1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
 
     //other deps
     implementation "org.postgresql:postgresql"
@@ -210,18 +216,21 @@ dependencies {
 
 
     test.useJUnitPlatform()
-    testCompile("org.junit.vintage:junit-vintage-engine:5.2.0")
-    testCompile("org.junit.jupiter:junit-jupiter-api:5.2.0")
-    testCompile("org.junit.jupiter:junit-jupiter-engine:5.2.0")
-    testCompile("org.junit.jupiter:junit-jupiter-params:5.2.0")
-    testCompile("org.junit.platform:junit-platform-launcher:1.2.0")
-    testCompile("org.junit.platform:junit-platform-commons:1.2.0")
-    testCompile("org.assertj:assertj-core:3.11.0")
+    testCompile("org.junit.jupiter:junit-jupiter:5.8.2")
+    testCompile("org.junit.platform:junit-platform-launcher:1.5.2")
+    testCompile("org.junit.platform:junit-platform-commons:1.5.2")
+    testCompile("org.assertj:assertj-core:3.23.1")
 
     // vault
     implementation('org.springframework.cloud:spring-cloud-starter-vault-config')
 }
 
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.enabled true
+    }
+}
 
 task teamcity() {
     doLast {
@@ -229,7 +238,7 @@ task teamcity() {
     }
 }
 
-extensions.getUserInfo  = {
+extensions.getUserInfo = {
     def gitUser = "git config user.name".execute().text.replaceAll("\\s+", "")
     def gitMail = "git config user.email".execute().text.replaceAll("\\s+", "")
     return "${gitUser}_${gitMail}"

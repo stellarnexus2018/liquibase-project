@@ -12,14 +12,12 @@ import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
 import ru.sberinsur.insure.config.KafkaConfig;
 import ru.sberinsur.insure.exception.TemplateErrors;
-import ru.sberinsur.insure.integrations.commons.KafkaHelper;
 import ru.sberinsur.insure.integrations.commons.InsureListener;
 import ru.sberinsur.insure.integrations.dto.common.doc.DocIgnore;
 import ru.sberinsur.insure.integrations.dto.template.ReponseTemplateDto;
 import ru.sberinsur.insure.integrations.dto.template.RequestTemplateDto;
 import ru.sberinsur.insure.integrations.exception.InsureException;
 import ru.sberinsur.insure.util.MapperUtil;
-
 
 import java.util.Map;
 
@@ -34,7 +32,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GroupListener extends InsureListener {
 
-    private final KafkaHelper kafkaHelper;
     private final KafkaConfig kafkaConfig;
 
     @KafkaHandler
@@ -51,7 +48,7 @@ public class GroupListener extends InsureListener {
             }
             ack.acknowledge();
 
-            return genericMessageResult(new ReponseTemplateDto("customerResponse"),headers);
+            return genericMessageResult(new ReponseTemplateDto("customerResponse"), headers);
         } catch (Exception e) {
             throw new InsureException(e.getMessage(), e, TemplateErrors.TEMPLATE_ERRORS);
         }
@@ -70,9 +67,8 @@ public class GroupListener extends InsureListener {
     }
 
 
-
-    private <T extends ru.sberinsur.insure.integrations.commons.Message> Message genericMessageResult(T message, Map<String, Object> headers) {
-        return new GenericMessage(message,
+    private <T extends ru.sberinsur.insure.integrations.commons.Message> Message<T> genericMessageResult(T message, Map<String, Object> headers) {
+        return new GenericMessage<>(message,
                 this.kafkaHelper.correlateHeaders(headers, this.defaultKafkaConfig.getSpecificConsumer().getGroupId()));
     }
 }

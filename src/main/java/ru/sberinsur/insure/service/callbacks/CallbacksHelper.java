@@ -30,7 +30,7 @@ public class CallbacksHelper {
      */
     public void sendChainResult(Map<String, Object> headers, Message message) {
         KafkaHeaderAccessor kafkaHeaderAccessor = KafkaHeaderAccessor.ofMap(headers);
-        ProducerRecord producerRecord = new ProducerRecord<>(kafkaHeaderAccessor.topic(), null, UUID.randomUUID().toString(), message, kafkaHeaderAccessor.toKafkaHeaders());
+        ProducerRecord<String, Message> producerRecord = new ProducerRecord<>(kafkaHeaderAccessor.topic(), null, UUID.randomUUID().toString(), message, kafkaHeaderAccessor.toKafkaHeaders());
         this.kafkaTemplate.send(producerRecord);
     }
 

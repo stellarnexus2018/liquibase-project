@@ -5,22 +5,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
-import org.springframework.validation.annotation.Validated;
-import ru.sberinsur.insure.integrations.commons.Message;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import ru.sberinsur.insure.config.KafkaConfig;
 import ru.sberinsur.insure.exception.TemplateErrors;
-import ru.sberinsur.insure.integrations.commons.KafkaHeaderAccessor;
-import ru.sberinsur.insure.integrations.commons.KafkaHelper;
 import ru.sberinsur.insure.integrations.commons.InsureListener;
+import ru.sberinsur.insure.integrations.commons.KafkaHeaderAccessor;
 import ru.sberinsur.insure.integrations.dto.template.ReponseTemplateDto;
 import ru.sberinsur.insure.integrations.dto.template.RequestTemplateDto;
 import ru.sberinsur.insure.integrations.exception.InsureErrorCode;
 import ru.sberinsur.insure.integrations.exception.InsureException;
-
 
 import java.util.Map;
 import java.util.UUID;
@@ -38,7 +35,6 @@ import java.util.UUID;
 public class SpecificListener extends InsureListener {
 
     private final KafkaConfig kafkaConfig;
-    private final KafkaHelper kafkaHelper;
 
 
     @KafkaHandler

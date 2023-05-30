@@ -64,9 +64,9 @@ if (hasProperty("teamcity")) {
     // left variable - name used in your code
     // on right - property that is will pass from teamcity, DASH - DELIMITER!
     // TODO: Set your dependent libraries
-    int_commons_version = teamcity("int-commons-version")
-    kafka_openid_version = teamcity("kafka-openid-version")
-    audit_commons_version = teamcity("audit-commons-versions")
+    int_commons_version = teamcity["int-commons-version"]
+    kafka_openid_version = teamcity["kafka-openid-version"]
+    audit_commons_version = teamcity["audit-commons-versions"]
 } else {
     version = "${SERVICE_VERSION}.${BUILD_ID}"
 }

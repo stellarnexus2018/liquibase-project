@@ -10,6 +10,7 @@ import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Service;
+import ru.sberinsur.insure.config.KafkaConfig;
 import ru.sberinsur.insure.exception.TemplateErrors;
 import ru.sberinsur.insure.integrations.commons.InsureListener;
 import ru.sberinsur.insure.integrations.dto.bpm.common.ErrorDto;
@@ -19,7 +20,6 @@ import ru.sberinsur.insure.integrations.dto.common.doc.DocIgnore;
 import ru.sberinsur.insure.integrations.dto.template.ReponseTemplateDto;
 import ru.sberinsur.insure.integrations.dto.template.RequestTemplateDto;
 import ru.sberinsur.insure.integrations.exception.InsureException;
-import ru.sberinsur.insure.integrations.exception.SystemErrorCode;
 import ru.sberinsur.insure.util.MapperUtil;
 
 import java.util.Arrays;
@@ -36,6 +36,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GroupListener extends InsureListener {
 
+    private final KafkaConfig kafkaConfig;
+
     @KafkaHandler
     @SendTo("!{source.headers['kafka_replyTopic']}")
     public Message<ReponseTemplateDto> getCustomer(RequestTemplateDto requestTemplateDto, @Headers Map<String, Object> headers, Acknowledgment ack) {
@@ -50,7 +52,7 @@ public class GroupListener extends InsureListener {
             }
             ack.acknowledge();
 
-            return genericMessageResult(new ReponseTemplateDto("customerResponse"), headers);
+            return new GenericMessage<>(new ReponseTemplateDto("customerResponse"), buildOutgoingHeaders(headers));
         } catch (Exception e) {
             throw new InsureException(e.getMessage(), e, TemplateErrors.TEMPLATE_ERRORS);
         }
@@ -66,28 +68,22 @@ public class GroupListener extends InsureListener {
             if (null != headers && !headers.isEmpty()) {
                 this.kafkaHelper.defaultPrintNotNullKafkaHeaders(headers);
             }
-            var completeExternalTaskDto = processingBpmRequest(request, headers);
-            ack.acknowledge();
-            var outgoingHeaders = kafkaHelper.correlateHeaders(headers,
-                    defaultKafkaConfig.getSpecificConsumer().getGroupId());
-            return new GenericMessage<>(completeExternalTaskDto, outgoingHeaders);
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            throw new InsureException(e.getMessage(), e, SystemErrorCode.INTERNAL_ERROR);
-        }
-    }
-
-    private CompleteExternalTaskDto processingBpmRequest(ExecuteExternalTaskDto request, Map<String, Object> headers) {
-        try {
             // business logic call here
             Map<String, Object> returnVariables = Map.of();
+            var completeExternalTaskDto = new CompleteExternalTaskDto(request.getTask(), returnVariables, null);
 
-            return new CompleteExternalTaskDto(request.getTask(), returnVariables, null);
+            ack.acknowledge();
+            return new GenericMessage<>(completeExternalTaskDto, buildOutgoingHeaders(headers));
+        } catch (InsureException e) {
+            log.error(e.getMessage(), e);
+            var taskDto = new CompleteExternalTaskDto(request.getTask(), Map.of(),
+                    new ErrorDto(e.getMessage(), Arrays.toString(e.getStackTrace()), e.getInsureErrorCode().getErrorDescription()));
+            return new GenericMessage<>(taskDto, buildOutgoingHeaders(headers));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
-            String businessError = (e instanceof InsureException) ?
-                    ((InsureException) e).getInsureErrorCode().getErrorDescription() : null;
-            return new CompleteExternalTaskDto(request.getTask(), Map.of(), new ErrorDto(e.getMessage(), Arrays.toString(e.getStackTrace()), businessError));
+            var taskDto = new CompleteExternalTaskDto(request.getTask(), Map.of(),
+                    new ErrorDto(e.getMessage(), Arrays.toString(e.getStackTrace()), null));
+            return new GenericMessage<>(taskDto, buildOutgoingHeaders(headers));
         }
     }
 
@@ -102,9 +98,8 @@ public class GroupListener extends InsureListener {
 
     }
 
-
-    private <T extends ru.sberinsur.insure.integrations.commons.Message> Message<T> genericMessageResult(T message, Map<String, Object> headers) {
-        return new GenericMessage<>(message,
-                this.kafkaHelper.correlateHeaders(headers, this.defaultKafkaConfig.getSpecificConsumer().getGroupId()));
+    private Map<String, Object> buildOutgoingHeaders(Map<String, Object> headers) {
+        return kafkaHelper.correlateHeaders(headers, kafkaConfig.getSpecificConsumer().getGroupId());
     }
+
 }

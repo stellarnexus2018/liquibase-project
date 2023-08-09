@@ -223,6 +223,9 @@ dependencies {
 
     // vault
     implementation('org.springframework.cloud:spring-cloud-starter-vault-config')
+  
+  	// Prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.3.6'
 }
 
 jacocoTestReport {

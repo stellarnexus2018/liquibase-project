@@ -1,267 +1,63 @@
-buildscript {
-    repositories {
-        mavenLocal()
-        maven {
-            url "${NEXUS_MAVEN_CENTRAL_URL}"
-            credentials {
-                username "${NEXUS_USER}"
-                password "${NEXUS_PASSWORD}"
-            }
-        }
-        maven {
-            url "${NEXUS_RELEASE_URL}"
-            credentials {
-                username "${NEXUS_USER}"
-                password "${NEXUS_PASSWORD}"
-            }
-        }
-        maven {
-            url "${NEXUS_SNAPSHOT_URL}"
-            credentials {
-                username "${NEXUS_USER}"
-                password "${NEXUS_PASSWORD}"
-            }
-        }
-    }
-    dependencies {
-
-    }
-}
-
-
 plugins {
-    id "io.spring.dependency-management" version "1.0.6.RELEASE"
-    id "org.springframework.boot" version "2.2.6.RELEASE"
-    id "com.palantir.docker" version "0.20.1"
-    id "org.liquibase.gradle" version "2.0.1"
-    id 'nu.studer.jooq' version '3.0.2'
-    id "com.avast.gradle.docker-compose" version "0.8.7"
-    id 'org.sonarqube' version "3.0"
-    id 'java'
-    id 'idea'
-    id 'jacoco'
-    id 'application'
-    id 'maven-publish'
+  id "org.springframework.boot" version "2.2.6.RELEASE"
+  id "io.spring.dependency-management" version "1.0.6.RELEASE"
+  id 'java'
+  id 'idea'
+  //id 'application'
 }
-
 ext {
-    set('springCloudVersion', "Hoxton.SR3")
-    logstashVersion = '5.2'
+  set('springCloudVersion', "Hoxton.SR3")
+  logstashVersion = '5.2'
 }
 
-
-group 'ru.sberinsur.insure'
-mainClassName = 'ru.sberinsur.insure.Application'
+group 'ru.master.project'
 sourceCompatibility = 11
-targetCompatibility = 11
-
-// get service version from teamcity if variable is set
-// add branch name to service version if not in master or develop
-if (hasProperty("teamcity")) {
-    version = "${SERVICE_VERSION}." + teamcity["build.number"] + teamcity['branch-name']
-    // set library versions from teamcity build parameters
-    // SPECIFY ONLY DEPENDENT LIBRARIES
-    // left variable - name used in your code
-    // on right - property that is will pass from teamcity, DASH - DELIMITER!
-    // TODO: Set your dependent libraries
-    int_commons_version = teamcity["int-commons-version"]
-    kafka_openid_version = teamcity["kafka-openid-version"]
-    audit_commons_version = teamcity["audit-commons-versions"]
-} else {
-    version = "${SERVICE_VERSION}.${BUILD_ID}"
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src/main/java']
-        }
-        resources {
-            srcDirs = ['src/main/resources', 'src/main/liquibase']
-        }
-    }
-    test {
-        java {
-            srcDirs = ['src/test/java']
-        }
-        resources {
-            srcDirs = ['src/test/resources']
-        }
-    }
-}
 
 configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-    testCompile {
-        /*Exclude JUnit4, because JUnit 5 MUST be used */
-        exclude group: 'junit', module: 'junit'
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-    }
-}
-
-jar {
-    manifest {
-        attributes 'Version': version,
-                'Build-time': new Date().format("dd-MM-yyyy'T'HH:mm:ss")
-    }
+  compileOnly {
+    extendsFrom annotationProcessor
+  }
+  testCompile {
+    exclude group: 'junit', module: 'junit'
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
 }
 
 repositories {
-    maven {
-        url "${NEXUS_MAVEN_CENTRAL_URL}"
-        credentials {
-            username "${NEXUS_USER}"
-            password "${NEXUS_PASSWORD}"
-        }
-    }
-    maven {
-        url "${NEXUS_RELEASE_URL}"
-        credentials {
-            username "${NEXUS_USER}"
-            password "${NEXUS_PASSWORD}"
-        }
-    }
-    maven {
-        url "${NEXUS_SNAPSHOT_URL}"
-        credentials {
-            username "${NEXUS_USER}"
-            password "${NEXUS_PASSWORD}"
-        }
-    }
-    mavenLocal()
-}
-
-docker {
-    name "template_service"
-    files bootJar.archivePath
-    buildArgs(['JAR_FILE': "${bootJar.archiveName}"])
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifactId project.name
-            groupId project.group
-            version project.version
-            from components.java
-            artifact bootJar
-        }
-    }
-    repositories {
-        maven {
-            url version.endsWith("SNAPSHOT") ? "${NEXUS_SNAPSHOT_URL}" : "${NEXUS_RELEASE_URL}"
-            credentials {
-                username NEXUS_USER
-                password NEXUS_PASSWORD
-            }
-        }
-    }
+  mavenCentral()
 }
 
 dependencies {
-    //spring cloud deps
-    implementation 'org.springframework.cloud:spring-cloud-starter-consul-all'
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-    //spring boot deps
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.kafka:spring-kafka'
-    testCompile("org.springframework.boot:spring-boot-starter-test")
-    //Insure deps
-    implementation "ru.sberinsur.insure:int-commons:${int_commons_version}"
-    compile "ru.sberinsur.insure:int-commons:${int_commons_version}:sources"
-    compile "ru.sberinsur.insure:audit-commons:${audit_commons_version}"
-    compile "ru.sberinsur.insure:audit-commons:${audit_commons_version}:sources"
+  implementation "ch.qos.logback:logback-classic"
+  implementation "ch.qos.logback:logback-core"
+  implementation "ch.qos.logback:logback-access"
+  implementation "net.logstash.logback:logstash-logback-encoder:${logstashVersion}"
+  implementation "org.slf4j:slf4j-api"
+  implementation "com.fasterxml.jackson.core:jackson-databind"
+  implementation "com.fasterxml.jackson.core:jackson-core"
+  implementation "com.fasterxml.jackson.core:jackson-annotations"
+  implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
+  compileOnly 'org.projectlombok:lombok:1.18.12'
+  testCompile 'org.projectlombok:lombok:1.18.12'
+  annotationProcessor 'org.projectlombok:lombok:1.18.12'
+  testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
 
-    //logger
-    implementation "ch.qos.logback:logback-classic"
-    implementation "ch.qos.logback:logback-core"
-    implementation "ch.qos.logback:logback-access"
-    implementation "net.logstash.logback:logstash-logback-encoder:${logstashVersion}"
-    implementation "org.slf4j:slf4j-api"
-    implementation "com.fasterxml.jackson.core:jackson-databind"
-    implementation "com.fasterxml.jackson.core:jackson-core"
-    implementation "com.fasterxml.jackson.core:jackson-annotations"
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-
-    // lombok
-    compileOnly 'org.projectlombok:lombok:1.18.12'
-    testCompile 'org.projectlombok:lombok:1.18.12'
-    annotationProcessor 'org.projectlombok:lombok:1.18.12'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.12'
-
-    //other deps
-    implementation "org.postgresql:postgresql"
-    implementation "org.modelmapper:modelmapper:2.3.0"
-    implementation 'javax.xml.bind:jaxb-api:2.3.0'
-    implementation 'com.sun.xml.bind:jaxb-impl:2.3.0'
-    implementation 'com.sun.xml.bind:jaxb-core:2.3.0'
-    implementation 'javax.activation:activation:1.1.1'
-    implementation 'com.google.guava:guava:23.0'
-    implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
-    implementation 'com.nimbusds:nimbus-jose-jwt:6.3'
-
-    liquibaseRuntime "org.liquibase:liquibase-core"
-    liquibaseRuntime "org.postgresql:postgresql"
-
-
-    test.useJUnitPlatform()
-    testCompile("org.junit.jupiter:junit-jupiter:5.8.2")
-    testCompile("org.junit.platform:junit-platform-launcher:1.5.2")
-    testCompile("org.junit.platform:junit-platform-commons:1.5.2")
-    testCompile("org.assertj:assertj-core:3.23.1")
-
-    // vault
-    implementation('org.springframework.cloud:spring-cloud-starter-vault-config')
-  
-  	// Prometheus
-    implementation 'io.micrometer:micrometer-registry-prometheus:1.3.6'
+  implementation "org.modelmapper:modelmapper:2.3.0"
+  implementation 'javax.xml.bind:jaxb-api:2.3.0'
+  implementation 'com.sun.xml.bind:jaxb-impl:2.3.0'
+  implementation 'com.sun.xml.bind:jaxb-core:2.3.0'
+  implementation 'javax.activation:activation:1.1.1'
+  implementation 'com.google.guava:guava:23.0'
+  implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
+  implementation 'com.nimbusds:nimbus-jose-jwt:6.3'
 }
 
-jacocoTestReport {
-    dependsOn test
-    reports {
-        xml.enabled true
-    }
-}
-
-task teamcity() {
-    doLast {
-        print("##teamcity[buildNumber '${version}']")
-    }
-}
-
-extensions.getUserInfo = {
-    def gitUser = "git config user.name".execute().text.replaceAll("\\s+", "")
-    def gitMail = "git config user.email".execute().text.replaceAll("\\s+", "")
-    return "${gitUser}_${gitMail}"
-}
-
-bootRun {
-    if (project.hasProperty('args')) {
-        args project.args.split(',')
-    } else {
-        def list = new ArrayList()
-        list.add("--docker.instanceId=${project.getUserInfo()}")
-        args list
-    }
-}
-
-// set service-version to teamcity parameter
-// print used library versions
-task teamcityParams() {
-    println("##teamcity[setParameter name='service-version' value='${version}']")
-    println("INT version: \t${int_commons_version}")
-    println("KAFKA version: \t${kafka_openid_version}")
-    println("AUDIT version: \t${audit_commons_version}")
+test {
+  useJUnitPlatform()
 }

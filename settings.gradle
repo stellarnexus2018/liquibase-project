@@ -1,15 +1,1 @@
-pluginManagement {
-    repositories {
-        maven {
-            url "${NEXUS_GRADLE_PLUGINS_URL}"
-            credentials {
-                username "${NEXUS_USER}"
-                password "${NEXUS_PASSWORD}"
-            }
-        }
-    }
-}
-
-rootProject.name = 'template'
-
-
+rootProject.name = 'liquibase-project'

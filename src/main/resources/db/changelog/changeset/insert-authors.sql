@@ -1,3 +1,3 @@
 --liquibase formatted sql
---changeset Igoryasha:1
-insert into author values (2, 'Igor');
+--changeset Igoryasha:insert-author
+insert into AUTHOR values (1, 'Igor');

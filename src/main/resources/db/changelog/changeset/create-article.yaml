@@ -23,5 +23,5 @@ databaseChangeLog:
                   type: bigint
                   constraints:
                     foreignKeyName: article_author_fk
-                    referencedTableName: author
+                    referencedTableName: AUTHOR
                     referencedColumnNames: id

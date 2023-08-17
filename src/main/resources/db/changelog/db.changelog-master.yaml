@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/changeset/create-author-table.yaml
+  - include:
+      file: db/changelog/changeset/create-article.yaml
+  - include:
+      file: db/changelog/changeset/change-author-name-column.yaml
+  - include:
+      file: db/changelog/changeset/insert-authors.sql

@@ -1,9 +1,12 @@
+import nu.studer.gradle.jooq.JooqEdition
+
 plugins {
   id "org.springframework.boot" version "2.2.6.RELEASE"
   id "io.spring.dependency-management" version "1.0.6.RELEASE"
   id 'java'
   id 'idea'
   //id 'application'
+  id 'nu.studer.jooq' version '6.0'
 }
 ext {
   set('springCloudVersion', "Hoxton.SR3")
@@ -46,7 +49,15 @@ dependencies {
 
   implementation 'org.liquibase:liquibase-core'
   //runtimeOnly 'com.h2database:h2'
-  compileOnly "mysql:mysql-connector-java"
+  ///compileOnly "mysql:mysql-connector-java"
+
+  // Postgre
+  implementation "org.postgresql:postgresql"
+
+  jooqGenerator 'org.postgresql:postgresql'
+  implementation 'org.springframework.boot:spring-boot-starter-jooq'
+  implementation group: 'com.github.t9t.jooq', name: 'jooq-postgresql-json', version: '2.0.2'
+  implementation "org.jooq.pro-java-11:jooq:'${jooqVersion}"
 
   compileOnly 'org.projectlombok:lombok:1.18.12'
   testCompile 'org.projectlombok:lombok:1.18.12'
@@ -61,6 +72,57 @@ dependencies {
   implementation 'com.google.guava:guava:23.0'
   implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.0.1'
   implementation 'com.nimbusds:nimbus-jose-jwt:6.3'
+}
+
+jooq {
+  version = '3.15.1'  // default (can be omitted)
+  edition = JooqEdition.PRO_JAVA_11  // default (can be omitted)
+
+  configurations {
+    main {  // name of the jOOQ configuration
+      generateSchemaSourceOnCompilation = true  // default (can be omitted)
+
+      generationTool {
+        logging = org.jooq.meta.jaxb.Logging.WARN
+        jdbc {
+          driver = 'org.postgresql.Driver'
+          url = 'jdbc:postgresql://localhost:5432/jooq_db'
+          user = 'igor'
+          password = 'Qw123456'
+          properties {
+            property {
+              key = 'ssl'
+              value = 'false'
+            }
+          }
+        }
+        generator {
+          name = 'org.jooq.codegen.DefaultGenerator'
+          database {
+            name = 'org.jooq.meta.postgres.PostgresDatabase'
+            inputSchema = 'public'
+            excludes = '.*_[0-9]+'
+            forcedTypes {
+            }
+          }
+          generate {
+            deprecated = false
+            records = true
+            immutablePojos = true
+            fluentSetters = true
+            validationAnnotations = true
+            javaTimeTypes = true
+            relations = true
+          }
+          target {
+            //packageName = 'ru.master.project.dao'
+            directory = 'src/main/java/ru/master/project/dao'  // default (can be omitted)
+          }
+          strategy.name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+        }
+      }
+    }
+  }
 }
 
 test {

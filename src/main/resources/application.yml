@@ -8,17 +8,23 @@ spring:
   liquibase:
     enabled: true
   datasource:
-    driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/myDB
-    username: root
+    url: jdbc:postgresql://localhost:5432/jooq_db
+    username: igor
     password: Qw123456
+    driver-class-name: org.postgresql.Driver
+    #driverClassName: com.mysql.cj.jdbc.Driver
+    #url: jdbc:mysql://localhost:3306/myDB
+    #username: root
+    #password: Qw123456
     #url: jdbc:h2:file:./db
     #username: u
     #password: 1
   jpa:
     #database-platform: org.hibernate.dialect.H2Dialect
-    database-platform: org.hibernate.dialect.MySQLDialect
+    #database-platform: org.hibernate.dialect.MySQLDialect
+    #database-platform: org.hibernate.dialect.PostgreSQL82Dialect
     #database-platform: org.hibernate.dialect.MySQL5Dialect
+    database: postgresql
     show-sql: true
     hibernate:
       ddl-auto: none
